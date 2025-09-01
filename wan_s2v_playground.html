@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎥 WAN S2V Playground</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        input[type="text"], input[type="url"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        textarea {
+            width: 100%;
+            height: 80px;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            resize: vertical;
+            box-sizing: border-box;
+            font-family: monospace;
+        }
+        
+        .file-upload {
+            margin: 10px 0;
+        }
+        
+        .file-upload input[type="file"] {
+            margin-bottom: 10px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin: 20px 0;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border-left: 4px solid #007cba;
+            display: none;
+        }
+        
+        .result.success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+        
+        .result.error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        
+        pre {
+            background: #f1f1f1;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .video-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        video {
+            max-width: 100%;
+            border-radius: 5px;
+        }
+        
+        .sample-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+        }
+        
+        .sample-button {
+            background: #6c757d;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .sample-button:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎥 WAN S2V Model Playground</h1>
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">
+            Test your deployed WAN Speech-to-Video model on RunPod
+        </p>
+        
+        <form id="testForm">
+            <div class="form-group">
+                <label for="endpoint">🔗 RunPod Endpoint URL:</label>
+                <input type="url" id="endpoint" placeholder="https://api.runpod.ai/v2/YOUR_ENDPOINT_ID" required>
+                <small style="color: #666;">Get this from your RunPod serverless console</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="prompt">📝 Text Prompt:</label>
+                <input type="text" id="prompt" value="A person speaking professionally in a modern office" placeholder="Describe the video you want to generate">
+                <div class="sample-buttons">
+                    <button type="button" class="sample-button" onclick="setPrompt('A person giving a presentation')">Presentation</button>
+                    <button type="button" class="sample-button" onclick="setPrompt('Someone talking on the phone')">Phone Call</button>
+                    <button type="button" class="sample-button" onclick="setPrompt('A teacher explaining a concept')">Teaching</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="audioFile">🎵 Audio File:</label>
+                <div class="file-upload">
+                    <input type="file" id="audioFile" accept="audio/*" onchange="handleAudioFile(event)">
+                    <button type="button" class="sample-button" onclick="useSampleAudio()">Use Sample Audio</button>
+                </div>
+                <textarea id="audioData" placeholder="Audio will appear as base64 data here..." readonly></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="imageFile">🖼️ Image File:</label>
+                <div class="file-upload">
+                    <input type="file" id="imageFile" accept="image/*" onchange="handleImageFile(event)">
+                    <button type="button" class="sample-button" onclick="useSampleImage()">Use Sample Image</button>
+                </div>
+                <textarea id="imageData" placeholder="Image will appear as base64 data here..." readonly></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="resolution">📐 Resolution:</label>
+                <select id="resolution" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px;">
+                    <option value="512*512">512x512 (Fast)</option>
+                    <option value="768*768">768x768 (Balanced)</option>
+                    <option value="1024*1024">1024x1024 (High Quality)</option>
+                </select>
+            </div>
+            
+            <div style="display: flex; gap: 20px;">
+                <div class="form-group" style="flex: 1;">
+                    <label for="steps">🔢 Inference Steps:</label>
+                    <input type="number" id="steps" value="25" min="10" max="100" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px;">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label for="guidance">🎯 Guidance Scale:</label>
+                    <input type="number" id="guidance" value="7.5" min="1" max="20" step="0.5" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 5px;">
+                </div>
+            </div>
+            
+            <button type="submit" id="testButton">🚀 Generate Video</button>
+        </form>
+        
+        <div id="result" class="result">
+            <div id="status" class="status loading" style="display: none;">
+                ⏳ Processing your request...
+            </div>
+            <h3>📊 Response:</h3>
+            <pre id="output"></pre>
+            <div id="videoContainer" class="video-container"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Sample data
+        const sampleAudio = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
+        const sampleImage = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k=';
+        
+        function setPrompt(prompt) {
+            document.getElementById('prompt').value = prompt;
+        }
+        
+        function useSampleAudio() {
+            document.getElementById('audioData').value = sampleAudio;
+        }
+        
+        function useSampleImage() {
+            document.getElementById('imageData').value = sampleImage;
+        }
+        
+        function handleAudioFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64 = e.target.result;
+                    document.getElementById('audioData').value = base64;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        function handleImageFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64 = e.target.result;
+                    document.getElementById('imageData').value = base64;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        document.getElementById('testForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await testEndpoint();
+        });
+        
+        async function testEndpoint() {
+            const endpoint = document.getElementById('endpoint').value;
+            const prompt = document.getElementById('prompt').value;
+            const audioData = document.getElementById('audioData').value || sampleAudio;
+            const imageData = document.getElementById('imageData').value || sampleImage;
+            const resolution = document.getElementById('resolution').value;
+            const steps = parseInt(document.getElementById('steps').value);
+            const guidance = parseFloat(document.getElementById('guidance').value);
+            
+            if (!endpoint) {
+                alert('Please enter your RunPod endpoint URL');
+                return;
+            }
+            
+            const payload = {
+                input: {
+                    prompt: prompt,
+                    resolution: resolution,
+                    audio_file: audioData,
+                    image_file: imageData,
+                    num_inference_steps: steps,
+                    guidance_scale: guidance
+                }
+            };
+            
+            const button = document.getElementById('testButton');
+            const result = document.getElementById('result');
+            const status = document.getElementById('status');
+            const output = document.getElementById('output');
+            const videoContainer = document.getElementById('videoContainer');
+            
+            try {
+                button.disabled = true;
+                button.textContent = '⏳ Generating...';
+                
+                result.style.display = 'block';
+                result.className = 'result';
+                status.style.display = 'block';
+                status.textContent = '⏳ Sending request to RunPod...';
+                
+                output.textContent = 'Waiting for response...';
+                videoContainer.innerHTML = '';
+                
+                const startTime = Date.now();
+                
+                const response = await fetch(endpoint + '/runsync', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer YOUR_API_KEY_HERE'  // Replace with your actual API key
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const responseData = await response.json();
+                
+                // Display results
+                output.textContent = JSON.stringify(responseData, null, 2);
+                
+                if (responseData.status === 'COMPLETED' && responseData.output) {
+                    result.className = 'result success';
+                    status.textContent = `✅ Success! Generated in ${duration} seconds`;
+                    
+                    // Handle video output
+                    if (responseData.output.video_url) {
+                        videoContainer.innerHTML = `
+                            <h4>🎥 Generated Video:</h4>
+                            <video controls>
+                                <source src="${responseData.output.video_url}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                            <br><br>
+                            <a href="${responseData.output.video_url}" target="_blank" style="color: #007cba; text-decoration: none;">
+                                📥 Download Video
+                            </a>
+                        `;
+                    } else if (responseData.output.video_base64) {
+                        const videoBlob = new Blob([atob(responseData.output.video_base64)], {type: 'video/mp4'});
+                        const videoUrl = URL.createObjectURL(videoBlob);
+                        videoContainer.innerHTML = `
+                            <h4>🎥 Generated Video:</h4>
+                            <video controls>
+                                <source src="${videoUrl}" type="video/mp4">
+                                Your browser does not support the video tag.
+                            </video>
+                        `;
+                    }
+                } else {
+                    result.className = 'result error';
+                    status.textContent = `⚠️ Request completed in ${duration} seconds but may have issues`;
+                }
+                
+            } catch (error) {
+                result.className = 'result error';
+                status.textContent = '❌ Request failed';
+                output.textContent = `Error: ${error.message}\n\nThis might be because:\n- Endpoint is not ready yet\n- Cold start taking longer than expected\n- Invalid endpoint URL\n- Model loading issues\n\nTry again in a few minutes.`;
+                
+                console.error('Error:', error);
+            } finally {
+                button.disabled = false;
+                button.textContent = '🚀 Generate Video';
+            }
+        }
+        
+        // Initialize with sample data
+        window.onload = function() {
+            useSampleAudio();
+            useSampleImage();
+        }
+    </script>
+</body>
+</html>
