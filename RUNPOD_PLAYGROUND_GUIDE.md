@@ -160,7 +160,7 @@ I can create a simple web interface for you:
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': 'Bearer rpa_VO0LZMIM1CQD3GNBYARJ4B4X6ET4K6DY197FND7Ovhrdv4'
+        'Authorization': 'Bearer YOUR_RUNPOD_API_KEY'
                     },
                     body: JSON.stringify(payload)
                 });
