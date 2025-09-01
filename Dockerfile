@@ -60,8 +60,9 @@ RUN pip install \
     seaborn \
     pandas || echo "Optional packages installation completed"
 
-# Copy the handler script
+# Copy the handler script and generation script
 COPY runpod_handler.py /workspace/runpod_handler.py
+COPY generate.py /workspace/generate.py
 
 # Set environment variables
 ENV PYTHONPATH="/workspace/wan-s2v-14b/Wan2.2:${PYTHONPATH}"
