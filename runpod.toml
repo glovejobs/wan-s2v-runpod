@@ -1,6 +1,6 @@
 [project]
-name = "wan-s2v-14b"
-description = "WAN 2.2 S2V model for speech-to-video generation"
+name = "wan-s2v-runpod"
+description = "WAN 2.2 S2V model - Cost-optimized configuration"
 type = "custom"
 
 [runtime]
@@ -23,12 +23,48 @@ handler = "runpod_handler.py"
 cpu = 4
 memory = "16Gi"
 gpu = "NVIDIA GeForce RTX 4090"
+gpu_count = 1
 
 [scaling]
-min_replicas = 0
-max_replicas = 3
-idle_timeout = 30
+# IMPORTANT: Cost-saving settings
+min_replicas = 0              # Scale to zero when idle
+max_replicas = 2              # Limit max workers to 2
+target_queue_size = 1         # Scale up when 1 request is queued
+idle_timeout = 60             # Kill workers after 60 seconds idle (was 30)
+max_workers = 2               # Hard limit on concurrent workers
+
+[autoscaling]
+# More aggressive scale-down to save costs
+scale_down_delay = 30         # Wait 30s before scaling down
+scale_up_delay = 5            # Quick scale up when needed
+target_utilization = 80       # Only scale up at 80% utilization
+
+[timeout]
+# Request timeouts to prevent hanging workers
+max_execution_time = 300      # 5 minutes max per request
+request_timeout = 360         # 6 minutes total timeout
+handler_timeout = 300         # Handler must complete in 5 minutes
+
+[queue]
+# Queue management to prevent overload
+max_queue_size = 10           # Maximum 10 requests in queue
+max_retries = 1               # Only retry once on failure
 
 [environment]
 PYTHONUNBUFFERED = "1"
 HF_HOME = "/tmp"
+# Add memory management
+PYTORCH_CUDA_ALLOC_CONF = "max_split_size_mb:512"
+# Force garbage collection
+CUDA_EMPTY_CACHE = "1"
+
+[billing]
+# Cost control settings
+max_cost_per_hour = 5.0       # Alert if cost exceeds $5/hour
+billing_alerts = true         # Enable billing alerts
+
+[monitoring]
+# Enable monitoring for cost tracking
+enable_metrics = true
+log_level = "INFO"
+alert_on_error_rate = 0.2     # Alert if 20% of requests fail
